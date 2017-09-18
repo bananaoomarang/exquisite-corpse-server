@@ -2,6 +2,7 @@
   (:require [compojure.core :refer :all]
             [compojure.route :as route]
             [ring.middleware.json :refer [wrap-json-response wrap-json-body]]
+            [ring.middleware.cors :refer [wrap-cors]]
             [ring.middleware.defaults :refer [wrap-defaults api-defaults]]
             [monger.core :as mg]
             [monger.collection :as mc])
@@ -39,6 +40,7 @@
 
 (def app
   (-> app-routes
+      (wrap-cors #".*")
       (wrap-json-body { :keywords? true })
       (wrap-json-response)
       (wrap-defaults api-defaults)))
