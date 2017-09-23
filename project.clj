@@ -9,7 +9,7 @@
                  [ring/ring-json "0.4.0"]
                  [jumblerg/ring.middleware.cors "1.0.1"]
                  [http-kit "2.2.0"]
-                 [com.taoensso/sente "1.11.0"]]
+                 [jarohen/chord "0.8.1"]]
   :plugins [[lein-ring "0.9.7"]]
   :ring {:handler exquisite-corpse-server.core/app}
   :main exquisite-corpse-server.core
