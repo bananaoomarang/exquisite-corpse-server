@@ -47,7 +47,7 @@
              user-id))
 
     (with-channel req ws-ch
-      {:format :json}
+      {:format :transit-json}
 
       (go
         (>! ch {:type :user-joined
