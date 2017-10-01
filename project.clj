@@ -7,8 +7,11 @@
                  [com.novemberain/monger "3.1.0"]
                  [ring/ring-defaults "0.2.1"]
                  [ring/ring-json "0.4.0"]
+                 [ring/ring-core "1.6.2"]
+                 [ring/ring-devel "1.6.2"]
                  [jumblerg/ring.middleware.cors "1.0.1"]
                  [http-kit "2.2.0"]
+                 [danlentz/clj-uuid "0.1.7"]
                  [jarohen/chord "0.8.1"]]
   :plugins [[lein-ring "0.9.7"]]
   :ring {:handler exquisite-corpse-server.core/app}
