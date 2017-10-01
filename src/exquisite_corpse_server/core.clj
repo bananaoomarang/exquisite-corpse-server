@@ -19,32 +19,17 @@
 (def conn (mg/connect))
 (def db   (mg/get-db conn "exquisite_stories"))
 
-(defn send-messages [ws-ch]
-  (go-loop []
-    (<! (timeout 5000))
-    (>! ws-ch {:sneaky "json"})
-    (recur)))
-
-(defn receive-messages [ws-ch]
-  (go-loop []
-    (let [{:keys [message]} (<! ws-ch)]
-      (if message
-        (do
-          (println message)
-          (recur))
-        (do
-          (close! ws-ch)
-          (println "DISCONNECTED"))))))
-
 (defn handle-websocket [{:keys [ch ch-mult]} req]
   (let [tap-chan (chan)
-        user-id (uuid/v4)]
+        user-id (uuid/v4)
+        story-id (-> req :params :id)]
     
     (tap ch-mult tap-chan)
 
-    (println (format "Opened connection from %s, user-id %s"
+    (println (format "Opened connection from %s, user-id %s for story %s"
              (:remote-addr req)
-             user-id))
+             user-id
+             story-id))
 
     (with-channel req ws-ch
       {:format :transit-json}
@@ -57,7 +42,7 @@
           (alt!
             tap-chan ([message] (if message
                                   (do
-                                    (>! ws-ch message)
+                                    (if-not (= user-id (:user-id message)) (>! ws-ch message))
                                     (recur))
 
                                   (close! ws-ch)))
@@ -89,19 +74,34 @@
     { :body { :id (.toString (:_id doc)) :story (:story doc)} }))
 
 (defn handle-patch [id next-line]
-  (mc/update-by-id db "stories" (ObjectId. id) { :$push { :story next-line}})
+  (mc/update-by-id db "stories" (ObjectId. id) { :$push { :story next-line }})
   (handle-get id))
 
-(let [ch      (chan)
-      ch-mult (mult ch)]
-  (defroutes app-routes
-    (GET "/" [] "API IS GOOOOO")
-    (GET "/story" [] (handle-get-random))
-    (GET "/story/:id" [id] (handle-get id))
-    (POST "/story" { body :body } (handle-post body))
-    (PATCH "/story/:id" request (handle-patch (-> request :params :id) (-> request :body :nextLine)))
-    (GET "/chord" [] (partial handle-websocket {:ch ch :ch-mult ch-mult}))
-    (route/not-found "Not Found")))
+(defonce rooms (atom {}))
+
+(defn get-room [story-id]
+  (let [room (get @rooms story-id)]
+    (if room
+      (do
+        (println "FOUND ROOM :)")
+        (println room)
+        room)
+
+      ;; Otherwise make the room
+      (let [ch      (chan)
+            ch-mult (mult ch)]
+        (println "Creating room...")
+        (swap! rooms assoc story-id {:ch ch :ch-mult ch-mult})
+        (get-room story-id)))))
+
+(defroutes app-routes
+  (GET "/" [] "API IS GOOOOO")
+  (GET "/story" [] (handle-get-random))
+  (GET "/story/:id" [id] (handle-get id))
+  (POST "/story" { body :body } (handle-post body))
+  (PATCH "/story/:id" [req] (handle-patch (-> req :params :id) (-> req :body :nextLine)))
+  (GET "/chord/:id" [req] #(handle-websocket (get-room (-> % :params :id)) %))
+  (route/not-found "Not Found"))
 
 (def in-dev?
   (= (System/getenv "RING_DEV") "true"))
