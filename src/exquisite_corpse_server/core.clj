@@ -70,7 +70,8 @@
       :story (:story doc)}}))
 
 (defn handle-post [body]
-  (let [doc (mc/insert-and-return db "stories" { :story (:story body) })]
+  (let [story (if (:story body) (:story body) ["Once upon a time"])
+        doc (mc/insert-and-return db "stories" { :story story })]
     { :body { :id (.toString (:_id doc)) :story (:story doc)} }))
 
 (defn handle-patch [id next-line]
@@ -99,8 +100,8 @@
   (GET "/story" [] (handle-get-random))
   (GET "/story/:id" [id] (handle-get id))
   (POST "/story" { body :body } (handle-post body))
-  (PATCH "/story/:id" [req] (handle-patch (-> req :params :id) (-> req :body :nextLine)))
-  (GET "/chord/:id" [req] #(handle-websocket (get-room (-> % :params :id)) %))
+  (PATCH "/story/:id" req (handle-patch (-> req :params :id) (-> req :body :nextLine)))
+  (GET "/chord/:id" req (handle-websocket (get-room (-> req :params :id)) req))
   (route/not-found "Not Found"))
 
 (def in-dev?
@@ -109,8 +110,8 @@
 (def app
   (-> app-routes
       (wrap-defaults api-defaults)
-      (wrap-cors #".*")
       (wrap-json-body { :keywords? true })
+      (wrap-cors #".*")
       (wrap-json-response)
       (wrap-keyword-params)
       (wrap-params)))
