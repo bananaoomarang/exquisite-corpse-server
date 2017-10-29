@@ -2,7 +2,7 @@
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :min-lein-version "2.0.0"
-  :dependencies [[org.clojure/clojure "1.9.0-beta3"]
+  :dependencies [[org.clojure/clojure "1.8.0"]
                  [compojure "1.6.0"]
                  [com.novemberain/monger "3.1.0"]
                  [ring/ring-defaults "0.3.1"]
