@@ -13,6 +13,7 @@
                  [http-kit "2.2.0"]
                  [danlentz/clj-uuid "0.1.7"]
                  [jarohen/chord "0.8.1"]
+                 [bananaoomarang/ring-debug-logging "1.1.0"]
                  [org.clojure/core.async "0.3.443"]]
   :plugins [[lein-ring "0.9.7"]
             [lein-ancient "0.6.14"]]
