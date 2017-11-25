@@ -1,6 +1,7 @@
 (ns exquisite-corpse-server.models
   (:require [monger.core :as mg]
             [monger.collection :as mc]
+            [monger.query :as mq]
             [clojure.core.async :refer [<! >! put! close! chan go go-loop timeout mult tap untap alt!]])
   (:import org.bson.types.ObjectId))
 
@@ -36,6 +37,13 @@
      (if (nil? doc)
        :not-found
        (normalize-story doc)))))
+
+(defn list-top-stories []
+  (let [docs (mq/with-collection db "stories"
+               (mq/find {})
+               (mq/sort { :$natural -1 })
+               (mq/limit 20))]
+    (map normalize-story docs)))
 
 (defn update-story [id line]
   (let [oid (ObjectId. id)]

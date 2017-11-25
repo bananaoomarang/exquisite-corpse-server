@@ -25,6 +25,10 @@
   (let [story (read-story)]
     { :body story }))
 
+(defn get-top-stories []
+  (let [stories (list-top-stories)]
+    { :body stories }))
+
 (defn get-websocket [req]
   (let [room (get-room (-> req :params :id))
         ch (:ch room)
