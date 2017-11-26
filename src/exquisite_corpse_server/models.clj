@@ -10,6 +10,7 @@
 (defonce rooms (atom {}))
 
 (def default-story {:max-line-count 10
+                    :finished false
                     :lines [{:text "Once upon a time…"}]})
 
 ;; TODO use a spec!
@@ -41,17 +42,30 @@
        :not-found
        (normalize-story doc)))))
 
-(defn list-top-stories []
-  (let [docs (mq/with-collection db "stories"
-               (mq/find {})
-               (mq/sort { :$natural -1 })
-               (mq/limit 20))]
-    (map normalize-story docs)))
+(defn list-top-stories
+  ([] (list-top-stories true))
+
+  ([finished?]
+   (let [docs (mq/with-collection db "stories"
+                (mq/find { :finished { :$eq finished? }})
+                (mq/sort { :$natural -1 })
+                (mq/limit 20))]
+     (map normalize-story docs))))
+
+(defn mark-finished [id]
+  (let [oid       (ObjectId. id)
+        story     (read-story id)
+        lines     (:lines story)
+        max-lines (:max-line-count story)
+        finished  (= max-lines (count lines))]
+    (when finished
+      (mc/update-by-id db "stories" oid { :$set { :finished true }}))))
 
 (defn update-story [id line]
   (let [oid (ObjectId. id)]
 
     (mc/update-by-id db "stories" oid { :$push { :lines line }})
+    (mark-finished id)
     (read-story id)))
 
 (defn get-random-room-id []
