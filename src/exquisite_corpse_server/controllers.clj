@@ -34,7 +34,7 @@
         ch (:ch room)
         ch-mult (:ch-mult room)
         tap-chan (chan)
-        user-id (uuid/v4)
+        user-id (.toString (uuid/v4))
         story-id (-> req :params :id)]
 
     (tap ch-mult tap-chan)
