@@ -20,7 +20,7 @@
   (GET "/story/:id" [id] (get-story id))
   (POST "/story" { body :body } (post-story body))
   (PATCH "/story/:id" req (patch-story (-> req :params :id) (-> req :body :line)))
-  (GET "/stories" req (get-top-stories))
+  (GET "/stories" req (get-top-stories (-> req :params :finished? (= "true"))))
   (GET "/chord/:id" req (get-websocket req))
   (route/not-found "Not Found"))
 

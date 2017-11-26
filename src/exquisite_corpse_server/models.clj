@@ -47,7 +47,7 @@
 
   ([finished?]
    (let [docs (mq/with-collection db "stories"
-                (mq/find { :finished { :$eq finished? }})
+                (mq/find { :finished (if finished? { :$eq finished? } { :$ne true })})
                 (mq/sort { :$natural -1 })
                 (mq/limit 20))]
      (map normalize-story docs))))

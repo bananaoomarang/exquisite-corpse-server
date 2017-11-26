@@ -25,8 +25,8 @@
   (let [story (read-story)]
     { :body story }))
 
-(defn get-top-stories []
-  (let [stories (list-top-stories)]
+(defn get-top-stories [finished?]
+  (let [stories (list-top-stories finished?)]
     { :body stories }))
 
 (defn get-websocket [req]
