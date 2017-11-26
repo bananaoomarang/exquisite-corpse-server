@@ -49,21 +49,16 @@
 
       (go
         (>! ch {:type :user-joined
-                :user-id user-id})
+                      :user-id user-id})
 
         (loop []
           (alt!
             tap-chan ([message] (if message
                                   (do
-                                    (if (= user-id (:user-id message))
-                                      (when (= :user-joined (:type message))
-                                        (>! ws-ch (assoc message :type :it-you)))
-
-                                      (>! ws-ch message))
+                                    (if-not (= user-id (:user-id message)) (>! ws-ch message))
                                     (recur))
 
-                                  (do
-                                    (close! ws-ch))))
+                                  (close! ws-ch)))
             ws-ch ([ws-message] (if ws-message
                                   (do
                                     (>! ch {:type :user-action
