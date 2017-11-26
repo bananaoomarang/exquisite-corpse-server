@@ -9,11 +9,14 @@
 (def db   (mg/get-db conn "exquisite_stories"))
 (defonce rooms (atom {}))
 
-(def default-story { :lines ["Once upon a time…"]})
+(def default-story {:max-line-count 10
+                    :lines [{:text "Once upon a time…"}]})
 
+;; TODO use a spec!
 (defn- normalize-story [story]
-  { :id    (.toString (:_id story))
-    :lines (:lines story) })
+  (-> story
+      (assoc :id (.toString (:_id story)))
+      (dissoc :_id)))
 
 (defn create-story
   ([]
@@ -69,6 +72,6 @@
        ;; Otherwise make the room
        (let [ch      (chan)
              ch-mult (mult ch)]
-         (println "Creating room...")
+         (println "Creating room…")
          (swap! rooms assoc story-id {:ch ch :ch-mult ch-mult})
          (get-room story-id))))))
