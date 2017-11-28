@@ -30,12 +30,15 @@
     { :body stories }))
 
 (defn get-websocket [req]
-  (let [room (get-room (-> req :params :id))
+  (let [story-id (-> req :params :id)
+        user-id (.toString (uuid/v4))
+        room (update-room-user-count story-id 1)
+        user-count (:user-count room)
         ch (:ch room)
         ch-mult (:ch-mult room)
-        tap-chan (chan)
-        user-id (.toString (uuid/v4))
-        story-id (-> req :params :id)]
+        side-effect! (println "asdf" user-count)
+        sside-effect! (println room (:ch room))
+        tap-chan (chan)]
 
     (tap ch-mult tap-chan)
 
@@ -49,7 +52,8 @@
 
       (go
         (>! ch {:type :user-joined
-                :user-id user-id})
+                :user-id user-id
+                :user-count user-count})
 
         (loop []
           (alt!
@@ -74,4 +78,5 @@
                                   (do
                                     (untap ch-mult tap-chan)
                                     (>! ch {:type :user-left
-                                            :user-id user-id}))))))))))
+                                            :user-id user-id
+                                            :user-count (:user-count (update-room-user-count story-id -1))}))))))))))

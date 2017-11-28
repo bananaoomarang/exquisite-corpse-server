@@ -87,5 +87,14 @@
        (let [ch      (chan)
              ch-mult (mult ch)]
          (println "Creating room…")
-         (swap! rooms assoc story-id {:ch ch :ch-mult ch-mult})
+         (swap! rooms assoc story-id {:ch ch :ch-mult ch-mult :user-count 0})
          (get-room story-id))))))
+
+(defn update-room-user-count [story-id n]
+  (let [old-room  (get-room story-id)
+        old-count (:user-count old-room)
+        new-count (+ n old-count)
+        new-rooms (swap! rooms assoc-in [story-id :user-count] new-count)
+        new-room  (get new-rooms story-id)]
+
+    new-room))
