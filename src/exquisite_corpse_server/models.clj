@@ -42,6 +42,12 @@
        :not-found
        (normalize-story doc)))))
 
+(defn get-room-user-count [{:keys [id]}]
+  (let [room (get @rooms id)]
+    (if room
+      (:user-count room)
+      0)))
+
 (defn list-top-stories
   ([] (list-top-stories true))
 
@@ -50,7 +56,10 @@
                 (mq/find { :finished (if finished? { :$eq finished? } { :$ne true })})
                 (mq/sort { :$natural -1 })
                 (mq/limit 20))]
-     (map normalize-story docs))))
+
+     (->> docs
+          (map normalize-story)
+          (map #(assoc % :user-count (get-room-user-count %)))))))
 
 (defn mark-finished [id]
   (let [oid       (ObjectId. id)
