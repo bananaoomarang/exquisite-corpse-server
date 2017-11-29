@@ -36,8 +36,6 @@
         user-count (:user-count room)
         ch (:ch room)
         ch-mult (:ch-mult room)
-        side-effect! (println "asdf" user-count)
-        sside-effect! (println room (:ch room))
         tap-chan (chan)]
 
     (tap ch-mult tap-chan)
@@ -79,4 +77,6 @@
                                     (untap ch-mult tap-chan)
                                     (>! ch {:type :user-left
                                             :user-id user-id
-                                            :user-count (:user-count (update-room-user-count story-id -1))}))))))))))
+                                            :user-count (:user-count (update-room-user-count story-id -1))})
+                                    (when (room-empty? story-id)
+                                      (remove-room story-id)))))))))))

@@ -107,3 +107,17 @@
         new-room  (get new-rooms story-id)]
 
     new-room))
+
+(defn room-empty? [story-id]
+  (let [room (get-room story-id)]
+    (= 0 (:user-count room))))
+
+(defn remove-room [story-id]
+  (let [room    (get-room story-id)
+        ch      (:ch room)
+        ch-mult (:ch-mult room)]
+
+    ;; Not sure this is necessary? :)
+    (close! ch)
+
+    (swap! rooms dissoc story-id)))
