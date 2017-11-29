@@ -25,6 +25,10 @@
   (let [story (read-story)]
     { :body story }))
 
+(defn get-active-stories []
+  (let [stories (list-active-stories)]
+    { :body stories }))
+
 (defn get-top-stories [finished?]
   (let [stories (list-top-stories finished?)]
     { :body stories }))

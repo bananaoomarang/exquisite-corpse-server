@@ -13,11 +13,20 @@
                     :finished false
                     :lines [{:text "Once upon a time…"}]})
 
+(defn- get-room-user-count [{:keys [id]}]
+  (let [room (get @rooms id)]
+    (if room
+      (:user-count room)
+      0)))
+
 ;; TODO use a spec!
 (defn- normalize-story [story]
   (-> story
       (assoc :id (.toString (:_id story)))
       (dissoc :_id)))
+
+(defn- assoc-reader-count [story]
+  (assoc story :user-count (get-room-user-count story)))
 
 (defn create-story
   ([]
@@ -42,11 +51,15 @@
        :not-found
        (normalize-story doc)))))
 
-(defn get-room-user-count [{:keys [id]}]
-  (let [room (get @rooms id)]
-    (if room
-      (:user-count room)
-      0)))
+(defn list-active-stories []
+  (let [active-oids (map #(ObjectId. %) (keys @rooms))
+        side-effect! (println active-oids)
+        docs        (mc/find-maps db "stories" { :_id { :$in active-oids }})
+        side-effect! (println "docs!" docs)]
+
+    (->> docs
+         (map normalize-story)
+         (map assoc-reader-count))))
 
 (defn list-top-stories
   ([] (list-top-stories true))
@@ -59,7 +72,7 @@
 
      (->> docs
           (map normalize-story)
-          (map #(assoc % :user-count (get-room-user-count %)))))))
+          (map assoc-reader-count)))))
 
 (defn mark-finished [id]
   (let [oid       (ObjectId. id)
