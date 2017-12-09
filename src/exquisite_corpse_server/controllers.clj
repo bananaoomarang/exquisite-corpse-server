@@ -33,6 +33,11 @@
   (let [stories (list-top-stories finished?)]
     { :body stories }))
 
+(defn create-message [type message user-id]
+  { :type type
+    :message message
+   :user-id user-id })
+
 (defn get-websocket [req]
   (let [story-id (-> req :params :id)
         user-id (.toString (uuid/v4))
@@ -53,34 +58,32 @@
       {:format :transit-json}
 
       (go
-        (>! ch {:type :user-joined
-                :user-id user-id
-                :user-count user-count})
+        (>! ch (create-message :user-joined {:user-count user-count} user-id))
 
         (loop []
           (alt!
             tap-chan ([message] (if message
                                   (do
-                                    (if (= user-id (:user-id message))
-                                      (when (= :user-joined (:type message))
-                                        (>! ws-ch (assoc message :type :it-you)))
+                                    (let [same-user?   (= user-id (:user-id message))
+                                          user-joined? (= :user-joined (:type message))]
 
-                                      (>! ws-ch message))
+                                      (if same-user?
+                                        (when user-joined? (>! ws-ch (assoc message :type :it-you)))
+                                        (>! ws-ch message)))
                                     (recur))
 
-                                  (do
-                                    (close! ws-ch))))
+                                  (close! ws-ch)))
+
             ws-ch ([ws-message] (if ws-message
                                   (do
-                                    (>! ch {:type :user-action
-                                            :message (:message ws-message)
-                                            :user-id user-id})
+                                    (>! ch (create-message :user-action (:message ws-message) user-id))
                                     (recur))
 
                                   (do
                                     (untap ch-mult tap-chan)
-                                    (>! ch {:type :user-left
-                                            :user-id user-id
-                                            :user-count (:user-count (update-room-user-count story-id -1))})
+                                    (>! ch (create-message
+                                            :user-left
+                                            {:user-count (:user-count (update-room-user-count story-id -1))}
+                                            user-id))
                                     (when (room-empty? story-id)
                                       (remove-room story-id)))))))))))
